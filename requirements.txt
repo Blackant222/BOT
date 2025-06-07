@@ -1,0 +1,19 @@
+# Core Telegram Bot
+python-telegram-bot==20.7
+asyncio
+
+# AI and OpenAI
+openai==1.3.0
+aiohttp
+
+# Machine Learning
+pandas==2.1.4
+numpy
+scikit-learn==1.3.2
+joblib==1.3.2
+
+# Persian/Farsi text processing
+python-dateutil==2.8.2
+
+# Utilities
+python-dotenv==1.0.0

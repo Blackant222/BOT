@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: petmagix-telegram-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    plan: free
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_PATH
+        value: data/petmagix.db
+    disk:
+      name: petmagix-data
+      mountPath: /opt/render/project/src/petmagix-telegram-bot/data
+      sizeGB: 1
