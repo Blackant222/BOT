@@ -43,30 +43,68 @@ class Database:
             )
         ''')
         
-        # Health logs table
+        # Enhanced Health logs table with learning capabilities
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS health_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_id INTEGER,
-            log_date TEXT,
+            date TEXT,
             weight REAL,
             food_type TEXT,
+            food_intake_notes TEXT,
+            diet_changes TEXT,
             mood TEXT,
             stool_info TEXT,
             appetite TEXT,
             water_intake TEXT,
             activity_level TEXT,
+            activity_duration INTEGER,
+            activity_changes TEXT,
+            sleep_hours INTEGER,
+            sleep_quality TEXT,
             notes TEXT,
             symptoms TEXT,
-            sleep_hours INTEGER,
             medication_taken BOOLEAN,
             temperature TEXT,
             breathing TEXT,
             blood_test_image TEXT,
             vet_note_image TEXT,
             pet_image TEXT,
-            FOREIGN KEY (pet_id) REFERENCES pets (id)
+            ai_analysis TEXT,
+            risk_factors TEXT,
+            correlation_flags TEXT,
+            FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
         )
+        ''')
+        
+        # AI feedback table for learning
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ai_feedback (
+                feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                pet_id INTEGER,
+                consultation_id TEXT,
+                ai_type TEXT,
+                rating INTEGER,
+                feedback_type TEXT,
+                detailed_feedback TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (user_id),
+                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
+            )
+        ''')
+        
+        # AI learning patterns table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ai_learning_patterns (
+                pattern_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pet_id INTEGER,
+                pattern_type TEXT,
+                pattern_data TEXT,
+                confidence_score REAL,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
+            )
         ''')
         
         # Task tracking table
@@ -107,6 +145,25 @@ class Database:
                 message_count INTEGER DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users (user_id),
                 UNIQUE(user_id, usage_date)
+            )
+        ''')
+        
+        # Diet plans table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS diet_plans (
+                plan_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                pet_id INTEGER,
+                diet_type TEXT,
+                goal TEXT,
+                allergies TEXT,
+                budget TEXT,
+                preference TEXT,
+                generated_plan TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users (user_id),
+                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
             )
         ''')
         
@@ -181,17 +238,41 @@ class Database:
         return pets
     
     def add_health_log(self, pet_id, health_data):
-        """Add health log entry"""
+        """Add health log entry with image support"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO health_logs (pet_id, date, weight, food_type, mood, stool_info, 
-                                   symptoms, sleep_hours, medication_taken, activity_level, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (pet_id, datetime.now().strftime('%Y-%m-%d'), health_data.get('weight'), 
-              health_data.get('food_type'), health_data.get('mood'), health_data.get('stool_info'), 
-              health_data.get('symptoms'), health_data.get('sleep_hours'), 
-              health_data.get('medication_taken'), health_data.get('activity_level'), health_data.get('notes')))
+            INSERT INTO health_logs (pet_id, date, weight, food_type, food_intake_notes, diet_changes,
+                                   mood, stool_info, appetite, water_intake, activity_level, activity_duration,
+                                   activity_changes, sleep_hours, sleep_quality, notes, symptoms, 
+                                   medication_taken, temperature, breathing, blood_test_image, 
+                                   vet_note_image, pet_image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            pet_id, 
+            datetime.now().strftime('%Y-%m-%d'), 
+            health_data.get('weight'), 
+            health_data.get('food_type', 'عادی'),
+            health_data.get('food_intake_notes', ''),
+            health_data.get('diet_changes', ''),
+            health_data.get('mood'), 
+            health_data.get('stool_info'), 
+            health_data.get('appetite', ''),
+            health_data.get('water_intake', ''),
+            health_data.get('activity_level'),
+            health_data.get('activity_duration', 0),
+            health_data.get('activity_changes', ''),
+            health_data.get('sleep_hours', 8), 
+            health_data.get('sleep_quality', ''),
+            health_data.get('notes', ''),
+            health_data.get('symptoms', 'ندارد'),
+            health_data.get('medication_taken', False),
+            health_data.get('temperature', ''),
+            health_data.get('breathing', ''),
+            health_data.get('blood_test_image', ''),
+            health_data.get('vet_note_image', ''),
+            health_data.get('pet_image', '')
+        ))
         conn.commit()
         conn.close()
     
@@ -664,6 +745,157 @@ class Database:
         data = cursor.fetchall()
         conn.close()
         return data
+    
+    def store_ai_feedback_enhanced(self, user_id, pet_id, consultation_id, ai_type, rating, feedback_type, detailed_feedback=None):
+        """Store enhanced AI feedback for learning"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO ai_feedback (user_id, pet_id, consultation_id, ai_type, rating, feedback_type, detailed_feedback)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, pet_id, consultation_id, ai_type, rating, feedback_type, detailed_feedback))
+        conn.commit()
+        conn.close()
+    
+    def get_ai_learning_patterns(self, pet_id):
+        """Get AI learning patterns for specific pet"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM ai_learning_patterns WHERE pet_id = ? ORDER BY last_updated DESC', (pet_id,))
+        patterns = cursor.fetchall()
+        conn.close()
+        return patterns
+    
+    def store_ai_learning_pattern(self, pet_id, pattern_type, pattern_data, confidence_score):
+        """Store AI learning pattern"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO ai_learning_patterns (pet_id, pattern_type, pattern_data, confidence_score)
+            VALUES (?, ?, ?, ?)
+        ''', (pet_id, pattern_type, pattern_data, confidence_score))
+        conn.commit()
+        conn.close()
+    
+    def get_correlation_data(self, pet_id, days=30):
+        """Get correlation data for diet/activity/mood analysis"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT date, food_type, mood, stool_info, symptoms, weight, activity_level, notes
+            FROM health_logs 
+            WHERE pet_id = ? AND date >= date('now', '-{} days')
+            ORDER BY date DESC
+        '''.format(days), (pet_id,))
+        data = cursor.fetchall()
+        conn.close()
+        return data
+    
+    def update_health_log_with_ai_analysis(self, log_id, ai_analysis, risk_factors, correlation_flags):
+        """Update health log with AI analysis results"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE health_logs 
+            SET ai_analysis = ?, risk_factors = ?, correlation_flags = ?
+            WHERE id = ?
+        ''', (ai_analysis, risk_factors, correlation_flags, log_id))
+        conn.commit()
+        conn.close()
+    
+    def get_pet_historical_patterns(self, pet_id):
+        """Get historical patterns for predictive analysis"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT 
+                h.*,
+                f.rating as feedback_rating,
+                f.feedback_type,
+                p.pattern_data,
+                p.confidence_score
+            FROM health_logs h
+            LEFT JOIN ai_feedback f ON h.pet_id = f.pet_id AND date(h.date) = date(f.timestamp)
+            LEFT JOIN ai_learning_patterns p ON h.pet_id = p.pet_id
+            WHERE h.pet_id = ?
+            ORDER BY h.date DESC
+            LIMIT 90
+        ''', (pet_id,))
+        data = cursor.fetchall()
+        conn.close()
+        return data
+    
+    def save_diet_plan(self, user_id, pet_id, diet_data, generated_plan):
+        """Save generated diet plan to database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Mark previous plans as inactive
+        cursor.execute('UPDATE diet_plans SET is_active = FALSE WHERE pet_id = ?', (pet_id,))
+        
+        # Insert new plan
+        cursor.execute('''
+            INSERT INTO diet_plans (user_id, pet_id, diet_type, goal, allergies, budget, preference, generated_plan)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            pet_id,
+            diet_data.get('diet_type', ''),
+            diet_data.get('goal', ''),
+            diet_data.get('allergies', ''),
+            diet_data.get('budget', ''),
+            diet_data.get('preference', ''),
+            generated_plan
+        ))
+        
+        plan_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return plan_id
+    
+    def get_pet_diet_plans(self, pet_id, limit=5):
+        """Get diet plans for a pet"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM diet_plans 
+            WHERE pet_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?
+        ''', (pet_id, limit))
+        plans = cursor.fetchall()
+        conn.close()
+        return plans
+    
+    def get_active_diet_plan(self, pet_id):
+        """Get active diet plan for a pet"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM diet_plans 
+            WHERE pet_id = ? AND is_active = TRUE 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ''', (pet_id,))
+        plan = cursor.fetchone()
+        conn.close()
+        return plan
+    
+    def get_user_diet_plans(self, user_id, limit=10):
+        """Get all diet plans for a user"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT dp.*, p.name as pet_name, p.species 
+            FROM diet_plans dp
+            JOIN pets p ON dp.pet_id = p.pet_id
+            WHERE dp.user_id = ? 
+            ORDER BY dp.created_at DESC 
+            LIMIT ?
+        ''', (user_id, limit))
+        plans = cursor.fetchall()
+        conn.close()
+        return plans
 
 # Global database instance
 db = Database()

@@ -228,6 +228,9 @@ async def get_pet_medications(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     context.user_data['pet_data']['medications'] = medications
     
+    print(f"🔍 DEBUG: Medications set, moving to VACCINES state")
+    print(f"🔍 DEBUG: Current conversation state should be: {VACCINES}")
+    
     await update.message.reply_text(
         f"✅ داروها: {medications}\n\n"
         "وضعیت واکسیناسیون را انتخاب کنید:",
@@ -245,6 +248,23 @@ async def get_pet_vaccines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
+    # Debug logging
+    print(f"🔍 DEBUG: get_pet_vaccines called with callback_data: {query.data}")
+    print(f"🔍 DEBUG: Current user_data: {context.user_data}")
+    
+    # Check if conversation data exists
+    if 'pet_data' not in context.user_data:
+        print("❌ DEBUG: No pet_data found in context - conversation was lost!")
+        await query.edit_message_text(
+            "❌ خطا: اطلاعات جلسه از دست رفته است.\n\n"
+            "لطفاً مجدداً حیوان خانگی اضافه کنید.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🐕 افزودن حیوان خانگی", callback_data="add_pet")],
+                [InlineKeyboardButton("🔙 منوی اصلی", callback_data="back_main")]
+            ])
+        )
+        return ConversationHandler.END
+    
     vaccine_map = {
         "vaccine_complete": "کامل",
         "vaccine_incomplete": "ناقص", 
@@ -254,6 +274,8 @@ async def get_pet_vaccines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data in vaccine_map:
         vaccine_status = vaccine_map[query.data]
         context.user_data['pet_data']['vaccine_status'] = vaccine_status
+        
+        print(f"✅ DEBUG: Vaccine status set to: {vaccine_status}")
         
         # Save pet to database
         user_id = update.effective_user.id

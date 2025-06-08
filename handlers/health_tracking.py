@@ -8,7 +8,7 @@ from handlers.subscription import is_premium_feature_blocked, show_premium_block
 import config
 
 # Health log states
-SELECT_PET_HEALTH, WEIGHT_LOG, MOOD_LOG, STOOL_LOG, APPETITE_LOG, WATER_LOG, TEMPERATURE_LOG, BREATHING_LOG, ACTIVITY_LOG, NOTES_LOG, IMAGE_UPLOAD = range(11)
+SELECT_PET_HEALTH, WEIGHT_LOG, MOOD_LOG, STOOL_LOG, APPETITE_LOG, WATER_LOG, TEMPERATURE_LOG, BREATHING_LOG, ACTIVITY_LOG, FOOD_INTAKE_LOG, DIET_CHANGES_LOG, SLEEP_LOG, NOTES_LOG, IMAGE_UPLOAD = range(14)
 
 async def start_health_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start health logging"""
@@ -256,6 +256,68 @@ async def get_activity_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await query.edit_message_text(
             f"✅ فعالیت: {activity}\n\n"
+            "🍽️ یادداشت غذا و خوراک امروز:\n"
+            "مثال: غذای خشک، مرغ، برنج، تشویقی\n"
+            "یا 'رد' برای رد کردن",
+            reply_markup=back_keyboard("back_main")
+        )
+        return FOOD_INTAKE_LOG
+    
+    return ACTIVITY_LOG
+
+async def get_food_intake_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🍽️ Get food intake notes for enhanced correlation analysis"""
+    food_notes = clean_persian_input(update.message.text)
+    
+    if food_notes.lower() in ['رد', 'skip', 'نه']:
+        food_notes = ""
+    
+    context.user_data['health_data']['food_intake_notes'] = food_notes
+    
+    await update.message.reply_text(
+        f"✅ یادداشت غذا: {food_notes if food_notes else 'ثبت نشد'}\n\n"
+        "🔄 آیا امروز تغییری در رژیم غذایی داده‌اید؟\n"
+        "مثال: تغییر برند غذا، اضافه کردن مکمل، غذای جدید\n"
+        "یا 'رد' اگر تغییری نداده‌اید",
+        reply_markup=back_keyboard("back_main")
+    )
+    return DIET_CHANGES_LOG
+
+async def get_diet_changes_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """🔄 Get diet changes for enhanced correlation analysis"""
+    diet_changes = clean_persian_input(update.message.text)
+    
+    if diet_changes.lower() in ['رد', 'skip', 'نه', 'خیر']:
+        diet_changes = ""
+    
+    context.user_data['health_data']['diet_changes'] = diet_changes
+    
+    await update.message.reply_text(
+        f"✅ تغییرات غذایی: {diet_changes if diet_changes else 'تغییری نداده'}\n\n"
+        "😴 کیفیت خواب امشب را انتخاب کنید:",
+        reply_markup=sleep_quality_keyboard()
+    )
+    return SLEEP_LOG
+
+async def get_sleep_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """😴 Get sleep quality for enhanced analysis"""
+    query = update.callback_query
+    await query.answer()
+    
+    sleep_map = {
+        "sleep_excellent": "عالی",
+        "sleep_good": "خوب", 
+        "sleep_fair": "متوسط",
+        "sleep_poor": "ضعیف",
+        "sleep_restless": "بی‌قرار"
+    }
+    
+    if query.data in sleep_map:
+        sleep_quality = sleep_map[query.data]
+        context.user_data['health_data']['sleep_quality'] = sleep_quality
+        
+        await query.edit_message_text(
+            f"✅ کیفیت خواب: {sleep_quality}\n\n"
             "📸 آپلود تصاویر (اختیاری):\n\n"
             "می‌توانید تصاویر زیر را ارسال کنید:\n"
             "🩸 آزمایش خون\n"
@@ -270,7 +332,7 @@ async def get_activity_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return IMAGE_UPLOAD
     
-    return ACTIVITY_LOG
+    return SLEEP_LOG
 
 async def handle_image_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle image upload decision"""

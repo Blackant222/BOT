@@ -9,6 +9,7 @@ def main_menu_keyboard():
         [InlineKeyboardButton("📊 ثبت سلامت", callback_data="health_log")],
         [InlineKeyboardButton("🔍 تحلیل سلامت", callback_data="health_analysis")],
         [InlineKeyboardButton("🤖 مشاوره AI", callback_data="ai_chat")],
+        [InlineKeyboardButton("🍽️ برنامه غذایی", callback_data="diet_generator")],
         [InlineKeyboardButton("⏰ یادآورها", callback_data="reminders")],
         [InlineKeyboardButton("💎 ارتقاء به پریمیوم", callback_data="upgrade_premium")]
     ]
@@ -207,3 +208,15 @@ def medications_input_keyboard():
         [InlineKeyboardButton("❌ ندارد", callback_data="no_medications")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="back_gender")]
     ])
+
+def sleep_quality_keyboard():
+    """Sleep quality selection for enhanced health tracking"""
+    keyboard = [
+        [InlineKeyboardButton("😴 عالی", callback_data="sleep_excellent")],
+        [InlineKeyboardButton("😊 خوب", callback_data="sleep_good")],
+        [InlineKeyboardButton("😐 متوسط", callback_data="sleep_fair")],
+        [InlineKeyboardButton("😟 ضعیف", callback_data="sleep_poor")],
+        [InlineKeyboardButton("😰 بی‌قرار", callback_data="sleep_restless")],
+        [InlineKeyboardButton("🔙 بازگشت", callback_data="back_health")]
+    ]
+    return InlineKeyboardMarkup(keyboard)

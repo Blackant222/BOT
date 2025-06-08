@@ -8,6 +8,7 @@ from handlers.pet_management import *
 from handlers.health_tracking import *
 from handlers.ai_chat import *
 from handlers.health_analysis import *
+from handlers.diet_generator import *
 from handlers.reminders import *
 from handlers.subscription import *
 from handlers.admin_analytics import *
@@ -124,20 +125,29 @@ def main():
         states={
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_name)],
             SPECIES: [CallbackQueryHandler(get_pet_species, pattern="^species_")],
-            BREED: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_breed)],
+            BREED: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_breed),
+                CallbackQueryHandler(handle_skip_breed, pattern="^skip_breed$")
+            ],
             AGE_YEARS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_age_years)],
             AGE_MONTHS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_age_months)],
             WEIGHT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_weight)],
             GENDER: [CallbackQueryHandler(get_pet_gender, pattern="^gender_")],
             NEUTERED: [CallbackQueryHandler(get_pet_neutered, pattern="^neutered_")],
-            DISEASES: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_diseases)],
-            MEDICATIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_medications)],
+            DISEASES: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_diseases),
+                CallbackQueryHandler(handle_no_diseases, pattern="^no_diseases$")
+            ],
+            MEDICATIONS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_pet_medications),
+                CallbackQueryHandler(handle_no_medications, pattern="^no_medications$")
+            ],
             VACCINES: [CallbackQueryHandler(get_pet_vaccines, pattern="^vaccine_")]
         },
         fallbacks=[
             CallbackQueryHandler(cancel_add_pet, pattern="^back_main$"),
             CommandHandler("cancel", cancel_add_pet)
-        ]
+        ],
     )
     
     # Add health tracking conversation handler
@@ -153,6 +163,9 @@ def main():
             TEMPERATURE_LOG: [CallbackQueryHandler(get_temperature_log, pattern="^temp_")],
             BREATHING_LOG: [CallbackQueryHandler(get_breathing_log, pattern="^breathing_")],
             ACTIVITY_LOG: [CallbackQueryHandler(get_activity_log, pattern="^activity_")],
+            FOOD_INTAKE_LOG: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_food_intake_log)],
+            DIET_CHANGES_LOG: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_diet_changes_log)],
+            SLEEP_LOG: [CallbackQueryHandler(get_sleep_log, pattern="^sleep_")],
             IMAGE_UPLOAD: [
                 CallbackQueryHandler(handle_image_upload, pattern="^(upload_images|skip_images|upload_more)$"),
                 CallbackQueryHandler(finish_image_upload, pattern="^finish_images$"),
@@ -168,17 +181,21 @@ def main():
         ]
     )
     
-    # Add AI chat conversation handler with specialized modes
+    # Add AI chat conversation handler - simplified
     ai_chat_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(start_ai_chat, pattern="^ai_chat$")],
+        entry_points=[
+            CallbackQueryHandler(start_ai_chat, pattern="^ai_chat$"),
+            CallbackQueryHandler(select_pet_for_chat, pattern="^chat_pet_\d+$"),
+            CallbackQueryHandler(select_pet_for_chat, pattern="^chat_general$")
+        ],
         states={
             CHAT_MESSAGE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_chat_message),
+                MessageHandler(filters.PHOTO, handle_chat_message),
                 CallbackQueryHandler(continue_chat, pattern="^continue_chat$"),
                 CallbackQueryHandler(end_chat, pattern="^end_chat$"),
-                CallbackQueryHandler(emergency_mode, pattern="^emergency_mode$"),
-                CallbackQueryHandler(nutrition_mode, pattern="^nutrition_mode$"),
-                CallbackQueryHandler(behavior_mode, pattern="^behavior_mode$")
+                CallbackQueryHandler(select_pet_for_chat, pattern="^chat_pet_\d+$"),
+                CallbackQueryHandler(select_pet_for_chat, pattern="^chat_general$")
             ]
         },
         fallbacks=[
@@ -187,10 +204,31 @@ def main():
         ]
     )
     
+    # Add diet generator conversation handler
+    diet_conv_handler = ConversationHandler(
+        entry_points=[CallbackQueryHandler(start_diet_generator, pattern="^diet_generator$")],
+        states={
+            DIET_PET_SELECT: [CallbackQueryHandler(select_pet_for_diet, pattern="^select_pet_")],
+            DIET_TYPE: [CallbackQueryHandler(get_diet_type, pattern="^diet_")],
+            DIET_GOALS: [CallbackQueryHandler(get_diet_goals, pattern="^goal_")],
+            DIET_ALLERGIES: [
+                CallbackQueryHandler(handle_allergies_selection, pattern="^(no_allergies|has_allergies)$"),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_allergies_text)
+            ],
+            DIET_BUDGET: [CallbackQueryHandler(get_budget, pattern="^budget_")],
+            DIET_PREFERENCES: [CallbackQueryHandler(get_preferences_and_generate, pattern="^pref_")]
+        },
+        fallbacks=[
+            CallbackQueryHandler(cancel_diet_generator, pattern="^back_main$"),
+            CommandHandler("cancel", cancel_diet_generator)
+        ]
+    )
+    
     # Add conversation handlers
     application.add_handler(pet_conv_handler)
     application.add_handler(health_conv_handler)
     application.add_handler(ai_chat_handler)
+    application.add_handler(diet_conv_handler)
     
     # Add command handlers
     application.add_handler(CommandHandler("start", start))
@@ -229,15 +267,6 @@ def main():
     application.add_handler(CallbackQueryHandler(finish_health_log, pattern="^finish_health_log$"))
     application.add_handler(CallbackQueryHandler(save_and_finish, pattern="^save_and_finish$"))
     
-    # AI Chat enhanced handlers
-    application.add_handler(CallbackQueryHandler(general_mode, pattern="^general_mode$"))
-    application.add_handler(CallbackQueryHandler(health_insights, pattern="^health_insights$"))
-    application.add_handler(CallbackQueryHandler(symptom_assessment, pattern="^symptom_assessment$"))
-    application.add_handler(CallbackQueryHandler(predictive_timeline, pattern="^predictive_timeline$"))
-    application.add_handler(CallbackQueryHandler(generate_insights, pattern="^generate_insights$"))
-    application.add_handler(CallbackQueryHandler(generate_prediction, pattern="^generate_prediction$"))
-    application.add_handler(CallbackQueryHandler(handle_ai_feedback, pattern="^feedback_"))
-    application.add_handler(CallbackQueryHandler(handle_ai_feedback, pattern="^detailed_feedback_"))
     
     # Reminder handlers
     application.add_handler(CallbackQueryHandler(show_reminders, pattern="^reminders$"))
@@ -262,6 +291,21 @@ def main():
     application.add_handler(CallbackQueryHandler(start_free_trial, pattern="^free_trial$"))
     application.add_handler(CallbackQueryHandler(process_payment, pattern="^pay_(1month|3month|1year)$"))
     application.add_handler(CallbackQueryHandler(confirm_mock_payment, pattern="^confirm_payment_"))
+    
+    # Add direct vaccination handler as emergency fix
+    application.add_handler(CallbackQueryHandler(get_pet_vaccines, pattern="^vaccine_"))
+    
+    
+    # Add debug handler for all callback queries
+    async def debug_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Debug handler to catch unhandled callback queries"""
+        query = update.callback_query
+        if query:
+            print(f"🔍 DEBUG: Unhandled callback query: {query.data}")
+            await query.answer("Debug: Callback received")
+    
+    # Add debug handler as fallback (MUST be last)
+    application.add_handler(CallbackQueryHandler(debug_callback_handler))
     
     # Add error handler
     application.add_error_handler(error_handler)

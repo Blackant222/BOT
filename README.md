@@ -1,175 +1,160 @@
-# 🐾 PetMagix - AI-Powered Pet Care Assistant
+# 🐾 PetMagix Telegram Bot
 
-**PetMagix** is an advanced Telegram bot that provides comprehensive veterinary consultation and health management for pets using AI technology. Built with Python and powered by OpenAI's language models, it offers both free and premium tiers of service.
-
-## 🌟 Features
-
-### 🏥 **Veterinary Consultation**
-- **AI Chat**: Real-time consultation with Dr. VetX AI veterinarian
-- **Health Analysis**: Comprehensive health data analysis and insights
-- **Emergency Support**: 24/7 emergency triage and first aid guidance
-- **Specialized Consultations**: Nutrition, behavior, and general care advice
-
-### 📊 **Health Management**
-- **Pet Profiles**: Complete pet information management
-- **Health Tracking**: Daily health logging and monitoring
-- **Analytics**: Advanced health trend analysis
-- **Reminders**: Automated care reminders and notifications
-
-### 🎯 **Smart Features**
-- **Hot-Reloadable Prompts**: Real-time AI prompt updates without restart
-- **Tier-Based Service**: Free and premium consultation levels
-- **Persian Language**: Full support for Persian/Farsi users
-- **Admin Dashboard**: Comprehensive management interface
+A comprehensive Telegram bot for pet health management with AI-powered insights, health tracking, and smart reminders.
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Python 3.8+
-- Telegram Bot Token
-- OpenAI API Key
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone <your-repo-url>
-cd petmagix
-```
-
-2. **Install dependencies**
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configure API keys** (see `api.md` for details)
+### 2. Configure Environment
 ```bash
-# Edit config.py with your tokens
-BOT_TOKEN = "your_telegram_bot_token"
-OPENAI_API_KEY = "your_openai_api_key"
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env and add your tokens:
+# BOT_TOKEN=your_telegram_bot_token_here
+# OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-4. **Run the bot**
+### 3. Run the Bot
 ```bash
+# Simple startup with checks
+python run_bot.py
+
+# Or run directly
 python main.py
 ```
 
-## 📱 Usage
-
-### For Users
-1. Start a chat with your bot on Telegram
-2. Use `/start` to begin
-3. Add your pet information
-4. Access health tracking, AI consultation, and more
-
-### For Admins
-- Access admin panel through special commands
-- Manage prompts in real-time via `prompts.json`
-- Monitor analytics and user activity
-- Configure subscription tiers
-
-## 🏗️ Architecture
-
-### Core Components
-- **`main.py`**: Bot initialization and handler setup
-- **`handlers/`**: Feature-specific message handlers
-- **`utils/`**: Utility functions and database management
-- **`prompts.json`**: AI prompt configurations with hot-reload
-- **`config.py`**: Configuration and API credentials
-
-### Key Technologies
-- **Python-Telegram-Bot**: Telegram API integration
-- **OpenAI API**: AI-powered veterinary consultation
-- **SQLite**: Local database for user and pet data
-- **APScheduler**: Automated reminders and tasks
-
 ## 🔧 Configuration
 
-The bot uses a sophisticated prompt management system that allows real-time updates:
+### Required Environment Variables
+- `BOT_TOKEN`: Your Telegram bot token from @BotFather
+- `OPENAI_API_KEY`: Your OpenAI API key for AI features
 
-- **Hot-Reload**: Modify `prompts.json` and changes apply instantly
-- **Tier Management**: Separate prompts for free and premium users
-- **Model Configuration**: Easy switching between OpenAI models
-- **Persian Support**: Localized responses and error messages
+### Optional Configuration
+- `DATABASE_PATH`: Custom database path (defaults to `data/petmagix.db`)
 
-## 📊 Features Overview
+## 📁 Project Structure
 
-| Feature | Free Tier | Premium Tier |
-|---------|-----------|--------------|
-| Basic Health Analysis | ✅ | ✅ |
-| AI Chat Consultation | Limited | Unlimited |
-| Advanced Health Insights | ❌ | ✅ |
-| Emergency Support | ✅ | ✅ |
-| Detailed Reports | ❌ | ✅ |
-| Priority Support | ❌ | ✅ |
+```
+petmagix-telegram-bot/
+├── main.py                 # Main bot entry point
+├── config.py              # Configuration and settings
+├── run_bot.py             # Startup script with checks
+├── requirements.txt       # Python dependencies
+├── .env.example          # Environment template
+├── handlers/             # Bot command handlers
+│   ├── ai_chat.py        # AI chat functionality
+│   ├── health_tracking.py # Health logging
+│   ├── pet_management.py  # Pet CRUD operations
+│   ├── health_analysis.py # Health insights
+│   ├── reminders.py      # Smart reminders
+│   ├── subscription.py   # Premium features
+│   └── admin_analytics.py # Admin tools
+├── utils/                # Utility modules
+│   ├── database.py       # Database operations
+│   ├── openai_client.py  # AI client
+│   ├── analytics.py      # Usage analytics
+│   ├── keyboards.py      # Telegram keyboards
+│   ├── persian_utils.py  # Persian text utils
+│   └── prompt_manager.py # AI prompt management
+├── data/                 # Database storage
+└── analytics/           # Analytics logs
+```
+
+## 🤖 Features
+
+### 🐕 Pet Management
+- Add multiple pets with detailed profiles
+- Track species, breed, age, weight, medical history
+- Vaccination and medication tracking
+
+### 📊 Health Tracking
+- Daily health logging (weight, mood, appetite, etc.)
+- Photo uploads for vet records
+- Stool quality and breathing monitoring
+- Custom health notes
+
+### 🔍 AI-Powered Analysis
+- Health score calculation (0-100)
+- Symptom pattern recognition
+- Predictive health insights
+- Emergency situation detection
+
+### 💬 Smart AI Chat
+- Specialized veterinary consultation
+- Emergency mode for urgent issues
+- Nutrition and behavior guidance
+- Context-aware responses
+
+### ⏰ Smart Reminders
+- Medication schedules
+- Vaccination alerts
+- Daily health check reminders
+- Customizable notification settings
+
+### 📈 Analytics & Insights
+- Health trend analysis
+- Behavioral pattern tracking
+- Admin analytics dashboard
+- Data export capabilities
 
 ## 🛠️ Development
 
-### Project Structure
-```
-petmagix/
-├── main.py                 # Bot entry point
-├── config.py              # Configuration
-├── prompts.json           # AI prompts (hot-reloadable)
-├── requirements.txt       # Dependencies
-├── handlers/              # Message handlers
-│   ├── ai_chat.py
-│   ├── health_analysis.py
-│   ├── health_tracking.py
-│   ├── pet_management.py
-│   ├── reminders.py
-│   ├── subscription.py
-│   └── admin_*.py
-├── utils/                 # Utilities
-│   ├── database.py
-│   ├── openai_client.py
-│   ├── prompt_manager.py
-│   ├── analytics.py
-│   └── keyboards.py
-├── data/                  # Database
-│   └── petmagix.db
-└── analytics/             # Analytics data
-    └── *.json
-```
+### Database
+- SQLite database with automatic initialization
+- Stores user data, pets, health logs, and analytics
+- Located at `data/petmagix.db`
 
-### Adding New Features
-1. Create handler in `handlers/`
-2. Add prompts to `prompts.json`
-3. Register handler in `main.py`
-4. Update database schema if needed
+### AI Integration
+- OpenAI GPT-4.1 Nano for cost-effective responses
+- Specialized prompts for veterinary advice
+- Context-aware conversation handling
 
-## 📈 Analytics
-
-The bot includes comprehensive analytics:
-- User activity tracking
-- Health action monitoring
-- Daily usage summaries
-- Performance metrics
+### Analytics
+- Real-time usage tracking
+- Performance monitoring
+- Error logging and debugging
+- Daily analytics summaries
 
 ## 🔒 Security
 
-- API keys stored in configuration files
-- User data encrypted in database
-- Admin access controls
-- Rate limiting and abuse prevention
+- Environment variables for sensitive data
+- No hardcoded API keys
+- User data isolation
+- Secure database operations
 
-## 🌍 Localization
+## 📝 Admin Commands
 
-Currently supports:
-- **Persian/Farsi**: Complete localization
-- **English**: Technical documentation
+- `/analytics` - View usage statistics
+- `/detailed_analytics` - Comprehensive analytics
+- `/export_analytics` - Export data
+- `/clear_analytics` - Clear analytics data
 
-## 📞 Support
+## 🐛 Troubleshooting
 
-For technical support or questions:
-- Check the documentation in this repository
-- Review `api.md` for configuration help
-- Contact the development team
+### Common Issues
+
+1. **Bot not responding**
+   - Check BOT_TOKEN in .env file
+   - Verify bot is started with @BotFather
+
+2. **AI features not working**
+   - Verify OPENAI_API_KEY in .env file
+   - Check OpenAI account credits
+
+3. **Database errors**
+   - Ensure `data/` directory exists
+   - Check file permissions
+
+### Logs
+- Bot logs are displayed in console
+- Error tracking in analytics files
+- Use `/analytics` command for debugging
 
 ## 📄 License
 
-This project is proprietary software. All rights reserved.
-
----
-
-**Built with ❤️ for pet lovers everywhere**
+This project is for educational and personal use.
